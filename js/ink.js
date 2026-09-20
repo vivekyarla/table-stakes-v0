@@ -37,8 +37,24 @@ class Sep {
     if (P.length < 2) return;
     const nm = normals(P), rng = this.rng;
     const n = P.length, L = [], R = [];
+    // per-point widths, matched by arc length
+    let wAt = null;
+    if (o.widths && o.widths.length === pts.length) {
+      const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+      const tot = cum[cum.length - 1] || 1;
+      const pc = [0]; for (let i = 1; i < n; i++) pc.push(pc[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+      const ptot = pc[n - 1] || 1;
+      let j = 0;
+      wAt = (i) => {
+        const s_ = (pc[i] / ptot) * tot;
+        while (j < cum.length - 2 && cum[j + 1] < s_) j++;
+        const f = (s_ - cum[j]) / ((cum[j + 1] - cum[j]) || 1);
+        return o.widths[j] * (1 - f) + o.widths[Math.min(j + 1, o.widths.length - 1)] * f;
+      };
+    }
     for (let i = 0; i < n; i++) {
       const t = i / (n - 1);
+      const wBase = wAt ? wAt(i) : w;
       const off = tremor * rng.fbm(i * freq * 10 + ph, 3);
       const p = [P[i][0] + nm[i][0] * off, P[i][1] + nm[i][1] * off];
       // pressure: thin at the ends, full through the middle, with a little wobble
@@ -46,7 +62,7 @@ class Sep {
       if (t < 0.22) pr = ends[0] + (1 - ends[0]) * (t / 0.22);
       if (t > 0.80) pr = Math.min(pr, ends[1] + (1 - ends[1]) * ((1 - t) / 0.20));
       pr *= 1 + 0.16 * rng.fbm(i * 0.09 + ph * 1.7, 2);
-      const hw = Math.max(0.12, (w * pr) / 2);
+      const hw = Math.max(0.12, (wBase * pr) / 2);
       L.push([p[0] + nm[i][0] * hw, p[1] + nm[i][1] * hw]);
       R.push([p[0] - nm[i][0] * hw, p[1] - nm[i][1] * hw]);
     }
@@ -95,6 +111,14 @@ class Sep {
         w: w * (0.5 + 0.95 * avg), tremor, ends: [0.28, 0.28],
         tone: tone * clamp(0.4 + avg, 0, 1), step: 1.4,
       });
+      const crossThr = o.cross ?? 0.62;
+      if (avg > crossThr && (i % 2 === 0)) {
+        const k = spacing * 0.95;
+        const uu0 = u0 + (u1 - u0) * 0.18, uu1 = u1 - (u1 - u0) * 0.1;
+        const a2 = [p[0] + nrm[0] * uu0 * r + tg[0] * k, p[1] + nrm[1] * uu0 * r + tg[1] * k];
+        const b2 = [p[0] + nrm[0] * uu1 * r - tg[0] * k, p[1] + nrm[1] * uu1 * r - tg[1] * k];
+        this.stroke([a2, b2], { w: w * 0.8, tremor: tremor * 0.8, ends: [0.3, 0.3], tone: tone * 0.8, step: 1.4 });
+      }
     }
   }
 

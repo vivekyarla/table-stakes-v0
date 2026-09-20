@@ -1,51 +1,41 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Table Stakes — frame QA</title>
-<style>html,body{margin:0;background:#22201d;font:12px ui-monospace,Menlo,monospace;color:#9a938b}
-canvas{display:block;margin:0 auto}</style></head>
+<style>html,body{margin:0;background:#22201d;font:12px ui-monospace,Menlo,monospace;color:#9a938b}canvas{display:block;margin:0 auto}</style></head>
 <body><canvas id="c"></canvas>
-<script>window.onerror=(m,src,l,c)=>{document.body.insertAdjacentHTML('beforeend',
-  '<pre style="color:#ff8f6b;background:#22201d;padding:12px;font:13px ui-monospace;white-space:pre-wrap">'+m+'\n'+src+':'+l+':'+c+'</pre>');document.title='error';};
-window.addEventListener('unhandledrejection',e=>window.onerror(String(e.reason&&e.reason.stack||e.reason),'',0,0));</script>
+<script>window.onerror=(m,src,l,c)=>{document.body.insertAdjacentHTML('beforeend','<pre style="color:#ff8f6b;padding:12px;font:13px ui-monospace;white-space:pre-wrap">'+m+'\n'+src+':'+l+':'+c+'</pre>');document.title='error';};</script>
 <script type="module">
-import { drawShakeFrame } from '../js/shake.js';
-
+import { sceneAt, POSES } from '../js/shake.js';
+import { createRenderer } from '../js/gl.js';
+try {
 const q = new URLSearchParams(location.search);
-const TOTAL = +(q.get('total') || 240);
-const seed  = +(q.get('s') || 7);
-const FW    = +(q.get('w') || 420);
-const FH    = Math.round(FW * 0.56);
-const dpr   = +(q.get('dpr') || 2);
-const c = document.getElementById('c'), ctx = c.getContext('2d');
-
-function frameCanvas(f) {
-  const cv = document.createElement('canvas');
-  cv.width = FW * dpr; cv.height = FH * dpr;
-  const cx = cv.getContext('2d');
-  drawShakeFrame(cx, f / (TOTAL - 1), FW, FH, seed, dpr, {});
-  return cv;
+const TOTAL = +(q.get('total') || 240), seed = +(q.get('s') || 7);
+const FW = +(q.get('w') || 420), FH = Math.round(FW * 0.56);
+if (q.has('style')) POSES.style = +q.get('style');
+// pose overrides: ?set=A_CLASP.roll=0.2,B_CLASP.pos.1=-20
+for (const kv of (q.get('set') || '').split(',').filter(Boolean)) {
+  const [path, v] = kv.split('='); const ks = path.split('.'); let o = POSES;
+  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = +v;
 }
-
+const glc = document.createElement('canvas');
+const R = createRenderer(glc);
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const frame = (f, W, H) => { R.render(sceneAt(f / (TOTAL - 1), seed), W, H); return glc; };
 if (q.has('grid')) {
-  const n = +(q.get('grid') || 12);
-  const cols = +(q.get('cols') || 4), rows = Math.ceil(n / cols);
+  const n = +(q.get('grid') || 12), cols = +(q.get('cols') || 4), rows = Math.ceil(n / cols);
   const pad = 10, lab = 16;
-  c.width = (cols * (FW + pad) + pad) * dpr;
-  c.height = (rows * (FH + lab + pad) + pad) * dpr;
-  c.style.width = (c.width / dpr) + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.width = cols * (FW + pad) + pad; c.height = rows * (FH + lab + pad) + pad;
   ctx.fillStyle = '#22201d'; ctx.fillRect(0, 0, c.width, c.height);
   for (let i = 0; i < n; i++) {
     const f = Math.round((i / (n - 1)) * (TOTAL - 1));
     const x = pad + (i % cols) * (FW + pad), y = pad + Math.floor(i / cols) * (FH + lab + pad);
-    ctx.drawImage(frameCanvas(f), x, y, FW, FH);
+    ctx.drawImage(frame(f, FW, FH), x, y);
     ctx.fillStyle = '#9a938b'; ctx.font = '11px ui-monospace,Menlo,monospace';
     ctx.fillText(`f ${f}  t ${(f / (TOTAL - 1)).toFixed(2)}`, x + 1, y + FH + 12);
   }
 } else {
-  const f = +(q.get('f') || 120);
-  const W = +(q.get('w') || 1000), H = Math.round(W * 0.56);
-  c.width = W * dpr; c.height = H * dpr; c.style.width = W + 'px';
-  drawShakeFrame(ctx, f / (TOTAL - 1), W, H, seed, dpr, {});
+  const f = +(q.get('f') || 120), W = +(q.get('w') || 1000), H = Math.round(W * 0.56);
+  c.width = W; c.height = H; ctx.drawImage(frame(f, W, H), 0, 0);
 }
 document.title = 'ready';
+} catch (e) { document.body.insertAdjacentHTML('beforeend','<pre style="color:#ff8f6b;padding:12px;font:13px ui-monospace;white-space:pre-wrap">'+(e.stack||e)+'</pre>'); }
 </script></body></html>

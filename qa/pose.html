@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>pose sweep</title>
+<style>html,body{margin:0;background:#22201d}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script>window.onerror=(m,src,l,c)=>{document.body.insertAdjacentHTML('beforeend','<pre style="color:#ff8f6b;padding:12px;font:13px ui-monospace;white-space:pre-wrap">'+m+'\n'+src+':'+l+':'+c+'</pre>');};</script>
+<script type="module">
+// ?f=130&x=A_CLASP.tilt:-0.3,-0.1,0.1&y=B_CLASP.pos.1:-40,-14,12&set=gripMax=0.7&w=420
+import { sceneAt, POSES } from '../js/shake.js';
+import { createRenderer } from '../js/gl.js';
+try {
+const q = new URLSearchParams(location.search);
+const TOTAL = 240, f = +(q.get('f') || 130), seed = +(q.get('s') || 7);
+const FW = +(q.get('w') || 420), FH = Math.round(FW * 0.56);
+const setp = (path, v) => { const ks = path.split('.'); let o = POSES; for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = v; };
+for (const kv of (q.get('set') || '').split(',').filter(Boolean)) { const [p, v] = kv.split('='); setp(p, +v); }
+const parse = (spec) => { if (!spec) return null; const [path, vals] = spec.split(':'); return { path, vals: vals.split(',').map(Number) }; };
+const X = parse(q.get('x')), Y = parse(q.get('y'));
+const cols = X ? X.vals.length : 1, rows = Y ? Y.vals.length : 1;
+const glc = document.createElement('canvas'); const R = createRenderer(glc);
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const pad = 8, lab = 16;
+c.width = cols * (FW + pad) + pad; c.height = rows * (FH + lab + pad) + pad;
+ctx.fillStyle = '#22201d'; ctx.fillRect(0, 0, c.width, c.height);
+for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+  if (X) setp(X.path, X.vals[i]); if (Y) setp(Y.path, Y.vals[j]);
+  R.render(sceneAt(f / (TOTAL - 1), seed), FW, FH);
+  const x = pad + i * (FW + pad), y = pad + j * (FH + lab + pad);
+  ctx.drawImage(glc, x, y);
+  ctx.fillStyle = '#9a938b'; ctx.font = '11px ui-monospace,Menlo,monospace';
+  ctx.fillText((X ? X.path + '=' + X.vals[i] : '') + (Y ? '  ' + Y.path + '=' + Y.vals[j] : ''), x + 1, y + FH + 12);
+}
+document.title = 'ready';
+} catch (e) { document.body.insertAdjacentHTML('beforeend','<pre style="color:#ff8f6b;padding:12px;font:13px ui-monospace">'+(e.stack||e)+'</pre>'); }
+</script></body></html>
