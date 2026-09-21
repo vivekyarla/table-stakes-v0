@@ -121,12 +121,36 @@ def coastline():
             if best is None or best is start: break
             cur = best
         polys.append(poly)
+    CORE = (-122.53, 37.70, -122.35, 37.84)
+    def core(pts):
+        cx = sum(p[0] for p in pts) / len(pts); cy = sum(p[1] for p in pts) / len(pts)
+        return CORE[0] <= cx <= CORE[2] and CORE[1] <= cy <= CORE[3]
+    def chaikin(pts, closed_ring, n=2):
+        for _ in range(n):
+            out = []
+            m = len(pts)
+            rng_ = range(m) if closed_ring else range(m - 1)
+            if not closed_ring: out.append(pts[0])
+            for i in rng_:
+                a, b = pts[i], pts[(i + 1) % m]
+                out.append((0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]))
+                out.append((0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]))
+            if not closed_ring: out.append(pts[-1])
+            pts = out
+        return pts
     out = []
     for ring in closed:
         if abs(area_km2(ring)) < 0.01: continue
-        r = rnd(dp(ring, 5.0)); r.append(r[0]); out.append(r)
+        c = core(ring)
+        r = dp(ring, 5.0 if c else 30.0)
+        if not c: r = chaikin(r, True)
+        r = rnd(r); r.append(r[0]); out.append({'c': 1 if c else 0, 'p': r})
     for pc in open_pieces:
-        if len(pc) > 1: out.append(rnd(dp(pc, 5.0)))
+        if len(pc) < 2: continue
+        c = core(pc)
+        r = dp(pc, 5.0 if c else 45.0)
+        if not c and len(r) > 2: r = chaikin(r, False)
+        out.append({'c': 1 if c else 0, 'p': rnd(r)})
     return out
 
 # ---------- parks / water ----------
@@ -154,6 +178,11 @@ def areas():
 def roads():
     out = []
     rank = {'motorway': 3, 'trunk': 3, 'primary': 2, 'secondary': 1}
+    for e in load('minor_w') + load('minor_e') + load('minor'):
+        if e.get('type') != 'way' or 'geometry' not in e: continue
+        pts = [(g['lon'], g['lat']) for g in e['geometry']]
+        if len(pts) < 2: continue
+        out.append({'r': 0, 'b': 0, 'p': rnd(dp(pts, 8.0))})
     for e in load('roads'):
         if e.get('type') != 'way' or 'geometry' not in e: continue
         t = e.get('tags', {})
@@ -171,7 +200,7 @@ coast = coastline(); parks, water = areas(); rds = roads()
 geo = {'bbox': BBOX, 'coast': coast, 'parks': parks, 'water': water, 'roads': rds}
 js = '// Real geometry from OpenStreetMap (ODbL), built by tools/build-geo.py. [lon, lat].\nexport const GEO = ' + json.dumps(geo, separators=(',', ':')) + ';\n'
 (root / 'js/geo.js').write_text(js)
-print('coast pieces', len(coast), 'points', sum(len(c) for c in coast))
+print('coast pieces', len(coast), 'points', sum(len(c['p']) for c in coast))
 print('parks', len(parks), 'water', len(water), 'roads', len(rds), 'bytes', len(js))
 # debug plot
 from PIL import Image, ImageDraw
@@ -179,9 +208,9 @@ Wd, Hd = 1400, 900
 lon0, lat0, lon1, lat1 = BBOX
 def S(p): return ((p[0]-lon0)/(lon1-lon0)*Wd, (lat1-p[1])/(lat1-lat0)*Hd)
 im = Image.new('RGB', (Wd, Hd), (200, 215, 230)); dr = ImageDraw.Draw(im)
-for line in coast: dr.line([S(p) for p in line], fill=(30, 30, 30), width=2)
+for line in coast: dr.line([S(p) for p in line['p']], fill=(30, 30, 30), width=2)
 for poly in parks: dr.polygon([S(p) for p in poly], fill=(190, 210, 170), outline=(90, 120, 80))
 for poly in water: dr.polygon([S(p) for p in poly], fill=(170, 195, 220))
-for rd in rds: dr.line([S(p) for p in rd['p']], fill=(120, 100, 90) if rd['r'] < 3 else (60, 40, 40), width=1 + rd['r'] - 1)
+for rd in rds: dr.line([S(p) for p in rd['p']], fill=(170, 160, 150) if rd['r'] == 0 else (120, 100, 90) if rd['r'] < 3 else (60, 40, 40), width=max(1, rd['r']))
 cot = S((-122.40262, 37.79716)); dr.ellipse([cot[0]-5, cot[1]-5, cot[0]+5, cot[1]+5], fill=(200, 140, 30))
 im.save(D / 'debug_geo.png'); print('debug plot written')

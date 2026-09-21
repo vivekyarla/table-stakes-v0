@@ -6,7 +6,7 @@ import { drawStatic, waterMask, LABELS } from './sfmap.js';
 
 const cl = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
-export const SF_BOUNDS = [[37.698, -122.530], [37.842, -122.352]];
+export const SF_BOUNDS = [[37.703, -122.520], [37.832, -122.360]];
 
 export class SFMap {
   constructor(container, canvas, { seed = 7, dpr = Math.min(2, window.devicePixelRatio || 1), tiles = false, interactive = false } = {}) {
@@ -19,12 +19,24 @@ export class SFMap {
     });
     if (tiles) container.classList.add('tiles');
     if (tiles) L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap, &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(this.map);
-    this.map.fitBounds(SF_BOUNDS, { padding: [0, 0] });
+    this.map.invalidateSize({ animate: false });
+    this.fit();
+    document.fonts?.ready.then(() => { this.map.invalidateSize({ animate: false }); this.fit(); });
     this.par = { x: 0, y: 0, tx: 0, ty: 0 };
     this.t0 = performance.now();
     this.build();
     this.map.on('moveend zoomend', () => this.build());
-    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { this.map.invalidateSize(); this.map.fitBounds(SF_BOUNDS); }, 120); });
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { this.map.invalidateSize(); this.fit(); }, 120); });
+  }
+  /** Fit the city below the masthead band. */
+  fit() {
+    const band = this.titleBand();
+    const narrow = this.container.getBoundingClientRect().width < 720;
+    this.map.fitBounds(narrow ? [[37.703, -122.515], [37.812, -122.375]] : SF_BOUNDS, { paddingTopLeft: [0, band], paddingBottomRight: [0, 16] });
+  }
+  titleBand() {
+    const m = document.getElementById('masthead');
+    return m ? Math.round(m.getBoundingClientRect().height + 40) : 200;
   }
 
   project = ([lon, lat]) => { const p = this.map.latLngToContainerPoint([lat, lon]); return [p.x, p.y]; };
@@ -41,6 +53,13 @@ export class SFMap {
     const a = this.project([-122.45, 37.78]), b = this.project([-122.44, 37.78]);
     this.mpp = 881.0 / Math.hypot(b[0] - a[0], b[1] - a[1]);     // 0.01° lon at 37.78° ≈ 881 m
     this.mask = waterMask(this.project, W, H, 2);
+    {   // water tint: the mask at grid resolution, scaled up smoothly
+      const m = this.mask, c = document.createElement('canvas'); c.width = m.gw; c.height = m.gh;
+      const id = c.getContext('2d').createImageData(m.gw, m.gh);
+      for (let i = 0; i < m.g.length; i++) { const wtr = m.g[i] === 1; id.data[i * 4] = 40; id.data[i * 4 + 1] = 46; id.data[i * 4 + 2] = 58; id.data[i * 4 + 3] = wtr ? 22 : 0; }
+      c.getContext('2d').putImageData(id, 0, 0);
+      this.tint = c;
+    }
     const S = this.ink.get('ink'), G = this.ink.get('gold');
     S.record(); G.record();
     drawStatic(this.ink, this.rng, this.project, W, H, this.mpp, this.mask);
@@ -90,11 +109,14 @@ export class SFMap {
     this.par.x += (this.par.tx - this.par.x) * 0.06; this.par.y += (this.par.ty - this.par.y) * 0.06;
     const px = this.par.x, py = this.par.y;
     if (!this.staticDone) this._advanceReveal(now);
+    const wr0 = this.reveal;
     ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#F2EFE7'; ctx.fillRect(0, 0, W, H);
     const g = ctx.createRadialGradient(W * 0.5, H * 0.45, H * 0.2, W * 0.5, H * 0.5, W * 0.75);
     g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(60,50,40,0.10)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.globalAlpha = wr0;
+    ctx.drawImage(this.tint, px * 6, py * 4, W, H); ctx.globalAlpha = 1;
     ctx.restore();
     if (this.staticDone) { ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.drawImage(this.static, px * 6, py * 4, W, H); ctx.restore(); }
     else this.ink.composite(ctx, { paper: false, dx: px * 6, dy: py * 4 });
@@ -124,14 +146,23 @@ export class SFMap {
     ctx.restore();
     // lettering
     ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(px * 6, py * 4);
-    ctx.fillStyle = `rgba(28,24,21,${(0.85 * wr).toFixed(3)})`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
     for (const Lb of LABELS) {
       const p = this.project([Lb.ll[1], Lb.ll[0]]);
       ctx.save(); ctx.translate(p[0], p[1]); if (Lb.a) ctx.rotate(Lb.a);
-      ctx.font = Lb.i ? `italic ${Lb.s}px "Playfair Display", Georgia, serif` : `500 ${Lb.s}px Inter, system-ui, sans-serif`;
+      ctx.font = Lb.i ? `italic 500 ${Lb.s}px "Playfair Display", Georgia, serif` : `500 ${Lb.s}px Inter, system-ui, sans-serif`;
       if (Lb.sp) ctx.letterSpacing = Lb.sp + 'px';
-      ctx.fillText(Lb.t, 0, 0); ctx.restore();
+      // a paper halo so the lettering reads over the linework
+      ctx.strokeStyle = `rgba(242,239,231,${(0.9 * wr).toFixed(3)})`; ctx.lineWidth = Lb.i ? 3.5 : 4; ctx.strokeText(Lb.t, 0, 0);
+      ctx.fillStyle = `rgba(28,24,21,${((Lb.i ? 0.92 : 0.8) * wr).toFixed(3)})`; ctx.fillText(Lb.t, 0, 0); ctx.restore();
     }
+    ctx.restore();
+    // clear the masthead band: strokes fade to paper beneath the title
+    const band = this.titleBand();
+    ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const fg = ctx.createLinearGradient(0, band * 0.35, 0, band + 40);
+    fg.addColorStop(0, 'rgba(242,239,231,1)'); fg.addColorStop(0.55, 'rgba(242,239,231,0.85)'); fg.addColorStop(1, 'rgba(242,239,231,0)');
+    ctx.fillStyle = fg; ctx.fillRect(0, 0, W, band + 40);
     ctx.restore();
     ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 0.45; ctx.globalCompositeOperation = 'overlay';
     ctx.fillStyle = ctx.createPattern(this.grain, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore();

@@ -33,7 +33,10 @@ to ink → the map draws itself in beneath → title rises → markers appear.
 
 QA switches on `index.html`: `?nointro`, `?t=<seconds>` (map clock),
 `?card=<spot id>` (show a hover card), `?it=<0..1>` (intro at a fixed time),
-`?debug` (print exceptions on the page).
+`?tiles` (raster basemap under the drawing), `?pan` (drag/zoom),
+`?debug` (print exceptions and marker/projection agreement on the page).
+`qa/phone.html` frames the page at 390px — headless Chrome will not lay out
+narrower than 500px on its own.
 
 ## The intro: the handshake
 
