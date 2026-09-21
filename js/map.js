@@ -87,20 +87,9 @@ export class SFMap {
   _clouds() {
     const r = new Rng(this.seed + 3); this.clouds = [];
     for (let i = 0; i < 5; i++) {
-      const puffs = []; const n = 3 + (r.next() * 3 | 0);
-      let x = 0;
-      for (let k = 0; k < n; k++) { const rr = r.range(16, 34) * (k === 0 || k === n - 1 ? 0.75 : 1); puffs.push({ dx: x, dy: -rr * r.range(0.35, 0.7), rr }); x += rr * r.range(1.0, 1.4); }
-      const mid = x / 2; for (const p of puffs) p.dx -= mid;
-      // outline: upper envelope of the puffs, sampled left to right, then a lightly bumped base back
-      const out = [], x0 = puffs[0].dx - puffs[0].rr, x1 = puffs[n - 1].dx + puffs[n - 1].rr;
-      for (let xx = x0; xx <= x1; xx += 2.5) {
-        let top = 4;
-        for (const p of puffs) { const d = xx - p.dx; if (Math.abs(d) < p.rr) top = Math.min(top, p.dy - Math.sqrt(p.rr * p.rr - d * d)); }
-        out.push([xx, top + r.range(-0.4, 0.4)]);
-      }
-      const baseY = 4;
-      for (let xx = x1; xx >= x0; xx -= 6) out.push([xx, baseY + 1.5 * Math.sin(xx * 0.25 + i) + r.range(-0.3, 0.3)]);
-      this.clouds.push({ x: r.range(0, this.W), y: r.range(40, this.H - 80), v: r.range(6, 13), puffs, outline: out, alpha: r.range(0.55, 0.9) });
+      const puffs = []; const n = 4 + (r.next() * 3 | 0);
+      for (let k = 0; k < n; k++) puffs.push({ dx: (k - n / 2) * r.range(26, 40), dy: r.range(-14, 10), rr: r.range(26, 48) });
+      this.clouds.push({ x: r.range(0, this.W), y: r.range(40, this.H - 80), v: r.range(6, 13), puffs, alpha: r.range(0.5, 0.85) });
     }
   }
   /**
@@ -163,36 +152,18 @@ export class SFMap {
       ctx.quadraticCurveTo(w.x - w.len / 4 + dx, w.y - 2.2, w.x + dx, w.y); ctx.quadraticCurveTo(w.x + w.len / 4 + dx, w.y + 2.2, w.x + w.len / 2 + dx, w.y); ctx.stroke();
     }
     ctx.restore();
-    // clouds, drawn: a hatched shadow on the ground, then the cloud with a pencil edge
+    // clouds: shadow, puff, pencil edge
     ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     for (const c of this.clouds) {
       const cx = ((c.x + t * c.v) % (W + 300)) - 150 + px * 18, cy = c.y + Math.sin(t * 0.2 + c.x) * 6 + py * 12, fade = wr * c.alpha;
-      const path = (ox, oy) => {
-        ctx.beginPath();
-        const pts = c.outline;
-        ctx.moveTo(cx + ox + pts[0][0], cy + oy + pts[0][1]);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(cx + ox + pts[i][0], cy + oy + pts[i][1]);
-        ctx.closePath();
-      };
-      const hatch = (ox, oy, spacing, ang, alpha, lw, fromY) => {
-        ctx.save(); path(ox, oy); ctx.clip();
-        ctx.strokeStyle = `rgba(28,24,21,${alpha.toFixed(3)})`; ctx.lineWidth = lw; ctx.lineCap = 'round';
-        const R = 140, ca = Math.cos(ang), sa = Math.sin(ang), mx = cx + ox, my = cy + oy;
-        for (let k = -R; k < R; k += spacing) {
-          const nx = -sa * k, ny = ca * k; if (my + ny < fromY) continue;
-          ctx.beginPath(); ctx.moveTo(mx + nx - ca * R, my + ny - sa * R); ctx.lineTo(mx + nx + ca * R, my + ny + sa * R); ctx.stroke();
-        }
-        ctx.restore();
-      };
-      // ground shadow
       ctx.globalCompositeOperation = 'multiply';
-      ctx.save(); path(22, 30); ctx.fillStyle = `rgba(60,52,44,${(0.07 * fade).toFixed(3)})`; ctx.fill(); ctx.restore();
-      hatch(22, 30, 3.6, -0.75, 0.15 * fade, 0.7, -1e9);
-      // the cloud
+      for (const p of c.puffs) { const gr = ctx.createRadialGradient(cx + p.dx + 26, cy + p.dy + 34, 0, cx + p.dx + 26, cy + p.dy + 34, p.rr * 1.15); gr.addColorStop(0, `rgba(60,52,44,${(0.2 * fade).toFixed(3)})`); gr.addColorStop(1, 'rgba(60,52,44,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx + p.dx + 26, cy + p.dy + 34, p.rr * 1.15, 0, Math.PI * 2); ctx.fill(); }
       ctx.globalCompositeOperation = 'source-over';
-      ctx.save(); path(0, 0); ctx.fillStyle = `rgba(247,245,239,${(0.9 * fade).toFixed(3)})`; ctx.fill(); ctx.restore();
-      hatch(0, 0, 3.8, -0.55, 0.2 * fade, 0.6, cy - 6);
-      ctx.save(); path(0, 0); ctx.strokeStyle = `rgba(28,24,21,${(0.6 * fade).toFixed(3)})`; ctx.lineWidth = 1.0; ctx.lineJoin = 'round'; ctx.stroke(); ctx.restore();
+      for (const p of c.puffs) { const gr = ctx.createRadialGradient(cx + p.dx, cy + p.dy, 0, cx + p.dx, cy + p.dy, p.rr); gr.addColorStop(0, `rgba(255,253,248,${(0.95 * fade).toFixed(3)})`); gr.addColorStop(0.7, `rgba(255,253,248,${(0.75 * fade).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,253,248,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx + p.dx, cy + p.dy, p.rr, 0, Math.PI * 2); ctx.fill(); }
+      ctx.strokeStyle = `rgba(28,24,21,${(0.35 * fade).toFixed(3)})`; ctx.lineWidth = 0.9; ctx.beginPath();
+      const f = c.puffs[0]; ctx.moveTo(cx + f.dx - f.rr * 0.7, cy + f.dy + f.rr * 0.35);
+      for (const p of c.puffs) ctx.quadraticCurveTo(cx + p.dx, cy + p.dy + p.rr * 0.9, cx + p.dx + p.rr * 0.7, cy + p.dy + p.rr * 0.4);
+      ctx.stroke();
     }
     ctx.restore();
     // lettering
@@ -211,9 +182,9 @@ export class SFMap {
     // clear the masthead band: strokes fade to paper beneath the title
     const band = this.titleBand();
     ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const fg = ctx.createLinearGradient(0, band * 0.62, 0, band + 8);
-    fg.addColorStop(0, 'rgba(242,239,231,1)'); fg.addColorStop(0.5, 'rgba(242,239,231,0.7)'); fg.addColorStop(1, 'rgba(242,239,231,0)');
-    ctx.fillStyle = fg; ctx.fillRect(0, 0, W, band + 8);
+    const fg = ctx.createLinearGradient(0, 0, 0, band * 0.92);
+    fg.addColorStop(0, 'rgba(242,239,231,0.72)'); fg.addColorStop(0.55, 'rgba(242,239,231,0.5)'); fg.addColorStop(1, 'rgba(242,239,231,0)');
+    ctx.fillStyle = fg; ctx.fillRect(0, 0, W, band);
     ctx.restore();
     ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 0.45; ctx.globalCompositeOperation = 'overlay';
     ctx.fillStyle = ctx.createPattern(this.grain, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore();
