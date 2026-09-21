@@ -1,7 +1,7 @@
 // Raymarched handshake. Hands are signed-distance fields: capsules blended
 // with a smooth minimum, so knuckles, webbing and the thumb muscle emerge as
 // flesh rather than parts. Suit sleeves and shirt cuffs are capped cylinders.
-export const MAXB = 96;
+export const MAXB = 112;
 
 export const VS = `#version 300 es
 in vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
@@ -86,23 +86,23 @@ vec3 calcNormal(vec3 p) {
 }
 float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
   float res = 1.0; float t = mint;
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 24; i++) {
     float h = map(ro + rd * t).x;
     if (h < 0.05) return 0.0;
     res = min(res, k * h / t);
-    t += clamp(h, 0.8, 12.0);
+    t += clamp(h, 1.5, 18.0);
     if (t > maxt) break;
   }
   return clamp(res, 0.0, 1.0);
 }
 float calcAO(vec3 p, vec3 n) {
   float occ = 0.0, sca = 1.0;
-  for (int i = 0; i < 5; i++) {
-    float h = 1.5 + 9.0 * float(i);
+  for (int i = 0; i < 4; i++) {
+    float h = 1.5 + 11.0 * float(i);
     float d = map(p + h * n).x;
     occ += (h - d) * sca; sca *= 0.8;
   }
-  return clamp(1.0 - 0.02 * occ, 0.0, 1.0);
+  return clamp(1.0 - 0.024 * occ, 0.0, 1.0);
 }
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7)) + uSeed) * 43758.5453); }
 float hash3(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
@@ -154,7 +154,7 @@ void main() {
       vec3 g = vec3(noise3(p * 0.9 + vec3(e, 0, 0)) - noise3(p * 0.9 - vec3(e, 0, 0)),
                     noise3(p * 0.9 + vec3(0, e, 0)) - noise3(p * 0.9 - vec3(0, e, 0)),
                     noise3(p * 0.9 + vec3(0, 0, e)) - noise3(p * 0.9 - vec3(0, 0, e)));
-      n = normalize(n + 0.10 * (g - n * dot(g, n)) + 0.025 * (vec3(noise3(p * 4.0), noise3(p * 4.0 + 7.0), noise3(p * 4.0 + 13.0)) - 0.5));
+      n = normalize(n + 0.05 * (g - n * dot(g, n)));
     } else if (mat < 1.5) {
       float e = 0.6;
       vec3 g = vec3(noise3(p * 2.2 + vec3(e, 0, 0)) - noise3(p * 2.2 - vec3(e, 0, 0)),
@@ -163,7 +163,7 @@ void main() {
       n = normalize(n + 0.12 * (g - n * dot(g, n)));
     }
     vec3 alb; float rough; float spec;
-    if (mat < 0.5)      { alb = vec3(0.78, 0.60, 0.52) * (0.94 + 0.12 * noise3(p * 0.35)); alb = mix(alb, alb * vec3(1.08, 0.86, 0.82), 0.5 * noise3(p * 0.12 + 3.0)); rough = 0.54; spec = 0.12; }
+    if (mat < 0.5)      { alb = vec3(0.78, 0.60, 0.52) * (0.97 + 0.06 * noise3(p * 0.35)); rough = 0.5; spec = 0.14; }
     else if (mat < 1.5) { alb = vec3(0.10, 0.11, 0.14); rough = 0.95; spec = 0.03; }
     else if (mat < 2.5) { alb = vec3(0.93, 0.92, 0.89); rough = 0.85; spec = 0.04; }
     else                { alb = vec3(0.84, 0.66, 0.60); rough = 0.25; spec = 0.35; }
@@ -205,9 +205,9 @@ void main() {
   if (!hit && uAlphaBg > 0.5) { fragColor = vec4(0.0); return; }
   // grade: optional toned monochrome, grain, vignette
   float lum = dot(col, vec3(0.299, 0.587, 0.114));
-  vec3 toned = mix(vec3(0.16, 0.14, 0.12), vec3(0.97, 0.95, 0.91), lum);
+  vec3 toned = mix(vec3(0.13, 0.115, 0.10), vec3(0.97, 0.95, 0.91), pow(lum, 1.35));
   col = mix(col, toned, clamp(uStyle, 0.0, 1.0) * step(uStyle, 1.5));
-  col += (hash(gl_FragCoord.xy) - 0.5) * 0.008;
+
   col *= 1.0 - (uAlphaBg > 0.5 ? 0.0 : 0.18) * pow(length(suv - 0.5) * 1.35, 2.5);
   fragColor = vec4(pow(clamp(col, 0.0, 1.0), vec3(1.0 / 1.05)), 1.0);
 }`;

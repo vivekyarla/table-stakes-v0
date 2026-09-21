@@ -22,7 +22,7 @@ export const POSES = {
   light: [-0.55, 0.78, 0.55],
   gripMax: 0.85,
   thumbAdduct: [0.95, -0.10, -0.28],
-  style: 2.0,     // 0 colour, 1 toned mono, 2 mono with gold hands
+  style: 1.0,     // 0 colour, 1 toned mono, 2 mono with gold hands
   only: 0,      // 0 both, 1 hand A, 2 hand B
   alphaBg: false,
   inkOut: false,

@@ -55,13 +55,20 @@ function startMap() {
   if (q.has('card')) { const s = SPOTS.find((x) => x.id === q.get('card')) || SPOTS[0]; setTimeout(() => { showCard(s); const p = map.project([s.lon, s.lat]); placeCard(p[0], p[1]); }, 50); }
 }
 
+const gmaps = (s) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${s.name}, ${s.address}, San Francisco, CA`);
 $('#list').innerHTML = SPOTS.map((s, i) => `
   <article class="spot" id="spot-${s.id}">
     <div class="num">№ ${String(i + 1).padStart(2, '0')}</div>
-    <header><h2>${s.name}</h2>
-      <div class="meta"><span>${s.neighborhood}</span><span>${s.address}</span><span>${s.kind}</span></div>
-      <div class="rating">${shakes(s.handshakes)}<span class="verdict">${RATING[s.handshakes]}</span></div></header>
-    <dl><dt>Best for</dt><dd>${s.bestFor}</dd><dt>The move</dt><dd>${s.theMove}</dd><dt>Deal notes</dt><dd>${s.dealNotes}</dd><dt>Hours</dt><dd>${s.hours}</dd></dl>
+    <div class="body">
+      <header><h2>${s.name}</h2>
+        <div class="meta"><span>${s.kind}</span><span>${s.neighborhood}</span><span><a href="${gmaps(s)}" target="_blank" rel="noopener">${s.address}</a></span></div>
+        <div class="hours">${s.hours}</div>
+        <div class="rating">${shakes(s.handshakes)}<span class="verdict">${RATING[s.handshakes]}</span></div></header>
+      <p class="notes"><b>Deal notes</b>${s.dealNotes}</p>
+      <div class="tip"><b>Tip</b><p>${s.tip}</p></div>
+    </div>
+    ${s.photo ? `<figure class="photo"><img src="${s.photo}" alt="${s.name}"></figure>`
+              : `<figure class="photo empty"><svg viewBox="0 0 100 100"><use href="#i-sparkle"/></svg><span>Photo to come</span></figure>`}
   </article>`).join('');
 
 const introCanvas = $('#intro'), introWrap = $('#intro-wrap');
@@ -70,7 +77,7 @@ if (q.has('nointro') || reduced) { introWrap.remove(); title.classList.add('now'
 else {
   let mapStarted = false;
   intro = runIntro(introCanvas, {
-    duration: 4200, scale: Math.min(0.55, 900 / innerWidth), fixedT: q.has('it') ? +q.get('it') : null,
+    duration: 4200, scale: Math.min(0.78, 1180 / innerWidth), fixedT: q.has('it') ? +q.get('it') : null,
     onProgress: (t) => { if (t > 0.70) introWrap.classList.add('reveal'); if (t > 0.74 && !mapStarted) { mapStarted = true; startMap(); } if (t > 0.86) title.classList.add('on'); },
     onDone: () => { if (!mapStarted) { mapStarted = true; startMap(); } title.classList.add('on'); introWrap.classList.add('gone'); setTimeout(() => introWrap.remove(), 900); },
   });

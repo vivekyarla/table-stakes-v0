@@ -99,8 +99,8 @@ export class SFMap {
    */
   _advanceReveal(now) {
     if (this.revealStart === null || this.revealStart === undefined) this.revealStart = now;
-    const T = 1250, u = cl((now - this.revealStart) / T);
-    const D = 0.22;                        // each mark draws over 16% of the window
+    const T = 800, u0 = cl((now - this.revealStart) / T), u = 1 - (1 - u0) * (1 - u0);
+    const D = 0.34;                        // each mark draws over 16% of the window
     const S = this.ink.get('ink'), G = this.ink.get('gold');
     this.flight = [];
     for (const [rec, key, sep] of [[this.recInk, 'ink', S], [this.recGold, 'gold', G]]) {
@@ -110,7 +110,7 @@ export class SFMap {
       const upTo = Math.min(N, Math.floor(cl(u / (1 - D)) * N));
       for (let i = this.played[key]; i < upTo; i++) {
         const st = (i / N) * (1 - D), f = cl((u - st) / D);
-        if (f > 0 && rec[i].line && rec[i].line.P.length > 3) this.flight.push([rec[i], f, key]);
+        if (f > 0 && rec[i].line && rec[i].line.P.length > 10) this.flight.push([rec[i], f, key]);
       }
     }
     this.reveal = u;
@@ -171,6 +171,7 @@ export class SFMap {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
     for (const Lb of LABELS) {
       const p = this.project([Lb.ll[1], Lb.ll[0]]);
+      if (Lb.keep === 'w') p[0] = Math.max(p[0], 40 + Lb.t.length * (Lb.s * 0.62 + (Lb.sp || 0)) / 2);   // stay inside the frame
       ctx.save(); ctx.translate(p[0], p[1]); if (Lb.a) ctx.rotate(Lb.a);
       ctx.font = Lb.i ? `italic 500 ${Lb.s}px "Playfair Display", Georgia, serif` : `500 ${Lb.s}px Inter, system-ui, sans-serif`;
       if (Lb.sp) ctx.letterSpacing = Lb.sp + 'px';

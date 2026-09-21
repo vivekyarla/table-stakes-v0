@@ -51,10 +51,19 @@ export function handBones(g, { grip = 0.1, spread = 0.4, thumbUp = 0.5, thumbAdd
     const k = f.meta[1];
     bones.push({ a: [-4, k[1] * 0.35, 10], b: [k[0] - 6, k[1], f.mr[1] * 0.74], ra: 1.4 + 1.4 * grip, rb: 2.0 + 1.8 * grip, group: g, mat: 0, k: 10, shape: 0 });
   }
+  // interossei: the soft ridges between the metacarpals
+  for (let i = 0; i < 3; i++) {
+    const a = FINGERS[i].meta, b = FINGERS[i + 1].meta;
+    bones.push({ a: [12, (a[0][1] + b[0][1]) / 2, 9], b: [78, (a[1][1] + b[1][1]) / 2, 12 + 2 * grip], ra: 4.5 + 1.5 * grip, rb: 5 + 2 * grip, group: g, mat: 0, k: 16, shape: 0 });
+  }
+  // the ulnar styloid at the wrist, and the long thumb tendon along the radial edge
+  bones.push({ a: [-30, -22, 12], b: [-24, -24, 13], ra: 6, rb: 6, group: g, mat: 0, k: 9, shape: 0 });
+  bones.push({ a: [-34, 14, 14], b: [4, 32, 8], ra: 1.6 + 1.2 * grip, rb: 2.2 + 1.4 * grip, group: g, mat: 0, k: 10, shape: 0 });
   // veins wandering across the back of the hand
   bones.push({ a: [-20, 8, 19.5], b: [30, 20, 19.5], ra: 1.8, rb: 1.6, group: g, mat: 0, k: 12, shape: 0 });
   bones.push({ a: [30, 20, 19.5], b: [70, 30, 18.5], ra: 1.6, rb: 1.3, group: g, mat: 0, k: 12, shape: 0 });
   bones.push({ a: [-10, -14, 19], b: [46, -6, 18.5], ra: 1.6, rb: 1.3, group: g, mat: 0, k: 12, shape: 0 });
+  bones.push({ a: [46, -6, 18.5], b: [80, 8, 16], ra: 1.3, rb: 1.0, group: g, mat: 0, k: 12, shape: 0 });
 
   // fingers
   const spreadK = (spread - 0.4) * 0.35;

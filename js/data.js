@@ -8,14 +8,14 @@ export const SPOTS = [
     name: 'Cotogna',
     neighborhood: 'Jackson Square',
     address: '490 Pacific Ave',
-    kind: 'Italian · dinner',
+    kind: 'High-end Italian restaurant',
     handshakes: 3,
     lat: 37.79716, lon: -122.40262,
+    photo: null,   // set to an image URL and it appears on the right of the entry
     line: 'The room where term sheets get toasted.',
-    bestFor: 'Closing dinners. Founder-and-partner, four people max.',
-    theMove: 'Ask for a table along the brick wall, order the agnolotti for the table and let the sommelier run the wine. Say yes to the raviolo.',
-    dealNotes: 'Loud enough that nobody overhears you, quiet enough that nobody has to lean in. Two blocks from every Series A that ever happened on Montgomery.',
-    hours: 'Lunch & dinner, closed Sunday',
+    dealNotes: 'Closing dinners, four people at most. Loud enough that nobody overhears you, quiet enough that nobody leans in — and two blocks from every Series A that ever happened on Montgomery.',
+    tip: 'Ask for a table on the brick wall, order the agnolotti for the table, and let the sommelier run the wine.',
+    hours: 'Lunch & dinner · closed Sunday',
   },
 ];
 

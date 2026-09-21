@@ -22,7 +22,9 @@ from `file://`):
                      engraving and draws it in over ~2.6s, then waves, clouds, parallax
 
 The map runs on Leaflet (cdnjs). Spots are `lat`/`lon` in `js/data.js` and are
-placed by Leaflet, so they are exact. `?tiles` adds a CARTO raster basemap
+placed by Leaflet, so they are exact. Each entry carries `kind`, `address`
+(linked to Google Maps), `hours`, `handshakes`, `dealNotes`, `tip`, and an
+optional `photo` URL — leave it `null` and a placeholder shows. `?tiles` adds a CARTO raster basemap
 under the drawing; `?pan` enables dragging and zooming. Rebuild the geometry
 with `python3 tools/build-geo.py` (re-fetch with the Overpass queries in
 `data/q_*.ql`; OpenStreetMap data is ODbL — keep the attribution).

@@ -20,8 +20,8 @@ export const HILLS = [
   { name: 'Marin Headlands', ll: [37.8270, -122.5050], r: 520, quiet: true },
 ];
 export const LABELS = [
-  { t: 'PACIFIC OCEAN', ll: [37.735, -122.545], s: 20, sp: 6, a: -Math.PI / 2 },
-  { t: 'SAN FRANCISCO BAY', ll: [37.775, -122.352], s: 20, sp: 6, a: -Math.PI / 2 },
+  { t: 'PACIFIC OCEAN', ll: [37.745, -122.578], s: 17, sp: 6, keep: 'w' },
+  { t: 'SAN FRANCISCO BAY', ll: [37.762, -122.333], s: 15, sp: 5 },
   { t: 'MARIN', ll: [37.856, -122.520], s: 14, sp: 5 },
   { t: 'OAKLAND', ll: [37.812, -122.283], s: 14, sp: 5 },
   { t: 'Golden Gate Park', ll: [37.7694, -122.4862], s: 13, i: true },
