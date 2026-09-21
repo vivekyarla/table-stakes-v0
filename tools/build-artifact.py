@@ -7,7 +7,7 @@ css = (root / 'css/site.css').read_text()
 head = re.search(r'<head>(.*?)</head>', html, re.S).group(1)
 body = re.search(r'<body>(.*?)</body>', html, re.S).group(1)
 head = re.sub(r'<meta [^>]*>\s*', '', head)
-head = head.replace('<link rel="stylesheet" href="css/site.css">', '<style>\n' + css + '\n</style>')
+head = re.sub(r'<link rel="stylesheet" href="css/site.css[^"]*">', lambda m: '<style>\n' + css + '\n</style>', head)
 head = head.replace('<title>Table Stakes — by Rox</title>', '<title>Table Stakes</title>')
 out = head.strip() + '\n' + body.strip() + '\n'
 (root / 'dist/table-stakes.html').write_text(out)
