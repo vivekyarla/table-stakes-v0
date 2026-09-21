@@ -29,7 +29,7 @@ under the drawing; `?pan` enables dragging and zooming. Rebuild the geometry
 with `python3 tools/build-geo.py` (re-fetch with the Overpass queries in
 `data/q_*.ql`; OpenStreetMap data is ODbL , keep the attribution).
 
-Sequence on load: clouds part (about 1s, click or Esc to skip), the map draws
+Sequence on load: clouds part (about 1.7s, click or Esc to skip), the map draws
 itself in beneath them (0.8s), title rises, markers appear.
 `prefers-reduced-motion` skips straight to the finished map.
 
@@ -43,7 +43,7 @@ narrower than 500px on its own.
 ## The opening
 
 Two big clouds cover the page and part like curtains (`js/curtain.js`,
-about a second, click or Esc to skip) while the map draws itself in
+about 1.7s, click or Esc to skip) while the map draws itself in
 beneath. `prefers-reduced-motion` skips straight to the finished map.
 
 ## Engraving surface (kept for the map)
