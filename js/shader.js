@@ -154,7 +154,7 @@ void main() {
       vec3 g = vec3(noise3(p * 0.9 + vec3(e, 0, 0)) - noise3(p * 0.9 - vec3(e, 0, 0)),
                     noise3(p * 0.9 + vec3(0, e, 0)) - noise3(p * 0.9 - vec3(0, e, 0)),
                     noise3(p * 0.9 + vec3(0, 0, e)) - noise3(p * 0.9 - vec3(0, 0, e)));
-      n = normalize(n + 0.18 * (g - n * dot(g, n)) + 0.06 * (vec3(noise3(p * 4.0), noise3(p * 4.0 + 7.0), noise3(p * 4.0 + 13.0)) - 0.5));
+      n = normalize(n + 0.10 * (g - n * dot(g, n)) + 0.025 * (vec3(noise3(p * 4.0), noise3(p * 4.0 + 7.0), noise3(p * 4.0 + 13.0)) - 0.5));
     } else if (mat < 1.5) {
       float e = 0.6;
       vec3 g = vec3(noise3(p * 2.2 + vec3(e, 0, 0)) - noise3(p * 2.2 - vec3(e, 0, 0)),
@@ -190,8 +190,11 @@ void main() {
       // black and white, with the hands in gold
       float lum = dot(col, vec3(0.299, 0.587, 0.114));
       if (mat < 0.5 || mat > 2.5) {
-        vec3 g = mix(vec3(0.22, 0.15, 0.04), vec3(1.0, 0.88, 0.50), pow(lum * 1.15, 0.85));
-        g += vec3(1.0, 0.92, 0.70) * sp * 2.2;
+        // the site's gold (#B98F32), shaded from its own shadow up to a pale gleam
+        vec3 gold = vec3(0.725, 0.561, 0.196);
+        vec3 g = mix(gold * 0.26, gold, smoothstep(0.0, 0.72, lum));
+        g = mix(g, vec3(0.94, 0.85, 0.60), smoothstep(0.72, 1.0, lum) * 0.55);
+        g += vec3(1.0, 0.95, 0.80) * sp * 1.4;
         col = g;
       } else {
         col = mix(vec3(0.09, 0.08, 0.075), vec3(0.97, 0.96, 0.93), pow(lum, 0.9));
@@ -204,7 +207,7 @@ void main() {
   float lum = dot(col, vec3(0.299, 0.587, 0.114));
   vec3 toned = mix(vec3(0.16, 0.14, 0.12), vec3(0.97, 0.95, 0.91), lum);
   col = mix(col, toned, clamp(uStyle, 0.0, 1.0) * step(uStyle, 1.5));
-  col += (hash(gl_FragCoord.xy) - 0.5) * 0.03;
+  col += (hash(gl_FragCoord.xy) - 0.5) * 0.008;
   col *= 1.0 - (uAlphaBg > 0.5 ? 0.0 : 0.18) * pow(length(suv - 0.5) * 1.35, 2.5);
   fragColor = vec4(pow(clamp(col, 0.0, 1.0), vec3(1.0 / 1.05)), 1.0);
 }`;

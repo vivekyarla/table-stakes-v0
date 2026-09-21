@@ -99,8 +99,8 @@ export class SFMap {
    */
   _advanceReveal(now) {
     if (this.revealStart === null || this.revealStart === undefined) this.revealStart = now;
-    const T = 2200, u = cl((now - this.revealStart) / T);
-    const D = 0.16;                        // each mark draws over 16% of the window
+    const T = 1250, u = cl((now - this.revealStart) / T);
+    const D = 0.22;                        // each mark draws over 16% of the window
     const S = this.ink.get('ink'), G = this.ink.get('gold');
     this.flight = [];
     for (const [rec, key, sep] of [[this.recInk, 'ink', S], [this.recGold, 'gold', G]]) {
