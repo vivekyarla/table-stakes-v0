@@ -1,4 +1,4 @@
-// The guide. Coordinates are in map-world units (see sfmap.js, 1400 x 900).
+// The guide. Coordinates are real (WGS84); markers are placed by Leaflet.
 // Copy is placeholder for the Rox team to edit.
 export const CITY = { name: 'San Francisco', short: 'SF' };
 
@@ -10,7 +10,7 @@ export const SPOTS = [
     address: '490 Pacific Ave',
     kind: 'Italian · dinner',
     handshakes: 3,
-    x: 588, y: 236,
+    lat: 37.79716, lon: -122.40262,
     line: 'The room where term sheets get toasted.',
     bestFor: 'Closing dinners. Founder-and-partner, four people max.',
     theMove: 'Ask for a table along the brick wall, order the agnolotti for the table and let the sommelier run the wine. Say yes to the raviolo.',

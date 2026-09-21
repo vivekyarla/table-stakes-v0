@@ -51,6 +51,13 @@ class Sep {
 
   /** A nib stroke: slight tremor along its length, pressure taper at the ends. */
   stroke(pts, o = {}) {
+    if (o.clipTest) {   // keep only the runs of the line that pass the test
+      const P0 = resample(pts, o.step ?? 1.6); let run = [];
+      const opts = { ...o, clipTest: null };
+      for (const p of P0) { if (o.clipTest(p[0], p[1])) run.push(p); else { if (run.length > 2) this.stroke(run, opts); run = []; } }
+      if (run.length > 2) this.stroke(run, opts);
+      return;
+    }
     const w = o.w ?? 1.6, tremor = o.tremor ?? 0.7, freq = o.freq ?? 0.035;
     const ends = o.ends ?? [0.18, 0.12], tone = o.tone ?? 1;
     const ph = o.phase ?? (this._ph += 7.31);

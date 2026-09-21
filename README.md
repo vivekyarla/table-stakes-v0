@@ -14,14 +14,18 @@ from `file://`):
     css/site.css     tokens (paper / ink / gold), type (Playfair Display + Inter), layout
     js/app.js        wiring: intro → map reveal → markers; hover card; click-to-scroll
     js/data.js       the spots. Add an entry here and it appears on the map and in the list.
-    js/sfmap.js      San Francisco as authored geometry (coast, parks, hills, streets,
-                     bridges, labels) plus the engraving that draws it
-    js/map.js        runtime map: draws the engraving in over ~2.6s, then animates
-                     waves, clouds and shadows, parallax; projects spots to the screen
+    js/geo.js        real geometry from OpenStreetMap (coastline, parks, lakes, roads,
+                     bridges), built by tools/build-geo.py from data/*.json
+    js/sfmap.js      the engraving: how that geometry is drawn (coast, water lines,
+                     hachured relief, parks, roads, compass) plus relief and lettering
+    js/map.js        runtime on Leaflet: projection, bounds, markers; records the
+                     engraving and draws it in over ~2.6s, then waves, clouds, parallax
 
-Spot coordinates are map-world units (1400 × 900, north up). To place a new
-spot, open `qa/map.html`, hover to read coordinates off the drawing — or use the
-landmarks in `sfmap.js` as reference (Ferry Building ≈ 610,258; Twin Peaks ≈ 458,402).
+The map runs on Leaflet (cdnjs). Spots are `lat`/`lon` in `js/data.js` and are
+placed by Leaflet, so they are exact. `?tiles` adds a CARTO raster basemap
+under the drawing; `?pan` enables dragging and zooming. Rebuild the geometry
+with `python3 tools/build-geo.py` (re-fetch with the Overpass queries in
+`data/q_*.ql`; OpenStreetMap data is ODbL — keep the attribution).
 
 Sequence on load: handshake (4.2s, click or Esc to skip) → hands part and turn
 to ink → the map draws itself in beneath → title rises → markers appear.
