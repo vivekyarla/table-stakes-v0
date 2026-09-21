@@ -53,7 +53,7 @@ export function normals(pts) {
   });
 }
 
-/** Smoothly interpolate radius control values — linear steps read as facets. */
+/** Smoothly interpolate radius control values: linear steps read as facets. */
 export function radiusAt(radii, t) {
   const m = radii.length;
   if (m === 1) return radii[0];
@@ -65,7 +65,7 @@ export function radiusAt(radii, t) {
 }
 
 /**
- * Radii may be a plain array (symmetric) or {l, r} for an asymmetric form —
+ * Radii may be a plain array (symmetric) or {l, r} for an asymmetric form ,
  * a hand is wider on the thumb side than the little-finger side.
  */
 export function radPair(radii, t) {

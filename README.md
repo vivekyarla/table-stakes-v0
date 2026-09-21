@@ -1,6 +1,6 @@
 # Table Stakes v0
 
-A guide to the best places in San Francisco to get a deal done — by Rox.
+The best spots in San Francisco to get a deal done, ranked. By Rox.
 
 Everything on screen is generated in JavaScript. There are no image or model
 assets in the render path. Open `index.html` over HTTP (ES modules do not load
@@ -24,70 +24,43 @@ from `file://`):
 The map runs on Leaflet (cdnjs). Spots are `lat`/`lon` in `js/data.js` and are
 placed by Leaflet, so they are exact. Each entry carries `kind`, `address`
 (linked to Google Maps), `hours`, `handshakes`, `dealNotes`, `tip`, and an
-optional `photo` URL — leave it `null` and a placeholder shows. `?tiles` adds a CARTO raster basemap
+optional `photo` URL , leave it `null` and a placeholder shows. `?tiles` adds a CARTO raster basemap
 under the drawing; `?pan` enables dragging and zooming. Rebuild the geometry
 with `python3 tools/build-geo.py` (re-fetch with the Overpass queries in
-`data/q_*.ql`; OpenStreetMap data is ODbL — keep the attribution).
+`data/q_*.ql`; OpenStreetMap data is ODbL , keep the attribution).
 
-Sequence on load: handshake (4.2s, click or Esc to skip) → hands part → the map
-draws itself in beneath as a moving pen (~2.2s; every recorded stroke has a
-staggered start and draws along its length) → title rises → markers appear.
+Sequence on load: clouds part (about 1s, click or Esc to skip), the map draws
+itself in beneath them (0.8s), title rises, markers appear.
 `prefers-reduced-motion` skips straight to the finished map.
 
 QA switches on `index.html`: `?nointro`, `?t=<seconds>` (map clock),
 `?card=<spot id>` (show a hover card), `?it=<0..1>` (intro at a fixed time),
 `?tiles` (raster basemap under the drawing), `?pan` (drag/zoom),
 `?debug` (print exceptions and marker/projection agreement on the page).
-`qa/phone.html` frames the page at 390px — headless Chrome will not lay out
+`qa/phone.html` frames the page at 390px , headless Chrome will not lay out
 narrower than 500px on its own.
 
-## The intro: the handshake
+## The opening
 
-Two business people's hands meet, clasp, shake twice and part. It is rendered
-as a **signed-distance field, raymarched in a WebGL2 fragment shader**:
-
-    js/rig.js      anatomical hand rig — capsule bones in millimetres, joint
-                   flexion, spread, thumb opposition; suit sleeve + shirt cuff
-    js/shake.js    the shake as a function of time t in [0,1]: poses, timing,
-                   camera, light. `POSES` is the single tuning table.
-    js/shader.js   SDF scene + lighting: smooth-min skin, soft shadows, AO,
-                   wrap + subsurface skin term, pore-scale normal noise, grain
-    js/gl.js       thin WebGL2 wrapper (one quad, one program, uniforms)
-    js/vec3.js     vector / rotation helpers
-
-`POSES.style`: 0 colour, 1 toned monochrome, 2 monochrome with gold hands (the default).
+Two big clouds cover the page and part like curtains (`js/curtain.js`,
+about a second, click or Esc to skip) while the map draws itself in
+beneath. `prefers-reduced-motion` skips straight to the finished map.
 
 ## Engraving surface (kept for the map)
 
     js/ink.js      nib strokes, contour/lengthwise hatching, separations, grain
     js/geom.js     spine + radii tube geometry
     js/rng.js      seeded RNG + value noise
-    js/hands.js, js/hand3d.js   earlier engraved hand rigs — superseded by the
-                                raymarched intro, retained for reference
 
 ## QA
 
 Headless Chrome renders every page; exceptions print into the page so a
 blank render is never silent.
 
-    ./tools/shoot.sh "grid=12&w=430&cols=4" /tmp/grid.png "1820x1080"
-    ./tools/shoot.sh "f=130&w=1000"         /tmp/frame.png "1020x620"
-    ./tools/shoot.sh "f=130&w=1000&style=1" /tmp/mono.png  "1020x620"
-
-Override any pose value inline, or sweep two of them in a grid:
-
-    ./tools/shoot.sh "f=130&set=B_CLASP.roll=0.9,gripMax=0.7" /tmp/x.png "1020x620"
-    ./tools/shoot.sh "f=130&x=A_CLASP.roll:-0.1,0.15,0.4&y=B_CLASP.roll:0.45,0.75,1.05" /tmp/sweep.png "1300x800" pose
-
-Look at the clasp from another angle by moving the camera:
-
-    ./tools/shoot.sh "f=130&w=700&set=cam.pos.0=0,cam.pos.1=520,cam.pos.2=120" /tmp/top.png "720x440"
-
-The map alone, fully drawn or mid-reveal, and the whole page:
-
-    ./tools/shoot.sh "r=1&t=3"                  /tmp/map.png  "1400x900" map
-    ./tools/shoot.sh "r=0.35&t=1"               /tmp/half.png "1400x900" map
     ./tools/shoot.sh "nointro&card=cotogna&t=6" /tmp/page.png "1440x1500" index
+    ./tools/shoot.sh "it=0.5"                   /tmp/open.png "1440x900"  index   # curtains half open
+    ./tools/shoot.sh "r=1&t=3"                  /tmp/map.png  "1400x900"  map
+    ./tools/shoot.sh "r=0.35&t=1"               /tmp/half.png "1400x900"  map
 
-`tools/build-artifact.py` writes `dist/table-stakes.html` — the page with its
+`tools/build-artifact.py` writes `dist/table-stakes.html`, the page with its
 stylesheet inlined and no document wrapper, for hosts that supply their own.

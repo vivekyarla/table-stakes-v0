@@ -1,5 +1,5 @@
 // Page wiring: intro → map reveal; Leaflet markers with an on-cursor card; click-to-scroll.
-import { runIntro } from './intro.js';
+import { runCurtain } from './curtain.js';
 import { SFMap } from './map.js';
 import { SPOTS, RATING } from './data.js';
 
@@ -72,15 +72,14 @@ $('#list').innerHTML = SPOTS.map((s, i) => `
   </article>`).join('');
 
 const introCanvas = $('#intro'), introWrap = $('#intro-wrap');
-let intro = null; const skip = () => intro?.stop();
 if (q.has('nointro') || reduced) { introWrap.remove(); title.classList.add('now'); title.classList.add('on'); hero.classList.add('now'); startMap(); }
 else {
-  let mapStarted = false;
-  intro = runIntro(introCanvas, {
-    duration: 4200, scale: Math.min(0.78, 1180 / innerWidth), fixedT: q.has('it') ? +q.get('it') : null,
-    onProgress: (t) => { if (t > 0.70) introWrap.classList.add('reveal'); if (t > 0.74 && !mapStarted) { mapStarted = true; startMap(); } if (t > 0.86) title.classList.add('on'); },
-    onDone: () => { if (!mapStarted) { mapStarted = true; startMap(); } title.classList.add('on'); introWrap.classList.add('gone'); setTimeout(() => introWrap.remove(), 900); },
+  const cur = runCurtain(introCanvas, {
+    fixedT: q.has('it') ? +q.get('it') : null,
+    onStart: () => startMap(),                              // the map draws in beneath the clouds
+    onProgress: (t) => { if (t > 0.2) title.classList.add('on'); },
+    onDone: () => { title.classList.add('on'); introWrap.remove(); },
   });
-  addEventListener('keydown', (e) => { if (e.key === 'Escape') skip(); }, { once: true });
-  introWrap.addEventListener('click', skip, { once: true });
+  introWrap.addEventListener('click', () => cur.skip(), { once: true });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') cur.skip(); }, { once: true });
 }

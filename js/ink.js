@@ -1,6 +1,6 @@
 // Engraving surface. Each "separation" is its own alpha layer (like a riso
 // screen); they are tinted, mis-registered by a hair and multiplied onto the
-// paper at composite time. Nothing here is an image asset — it is all strokes.
+// paper at composite time. Nothing here is an image asset: it is all strokes.
 import { resample, normals, radiusAt, radPair, maxRadius, V } from './geom.js';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -153,7 +153,7 @@ class Sep {
 
   /**
    * Lengthwise shading for a flat form. Strokes run along the spine and
-   * converge as it narrows — the tendons on the back of a hand. They are broken
+   * converge as it narrows: the tendons on the back of a hand. They are broken
    * into short runs so the result reads as tone, not as wood grain.
    */
   hatchAlong(spine, radii, o = {}) {
@@ -197,7 +197,7 @@ class Sep {
     }
   }
 
-  /** Short broken flicks inside a region — skin texture, not smooth tone. */
+  /** Short broken flicks inside a region: skin texture, not smooth tone. */
   texture(poly, o = {}) {
     const n = o.n ?? 160, len = o.len ?? 6, w = o.w ?? 0.6;
     const ang = o.angle ?? 0, spreadA = o.spread ?? 0.5, tone = o.tone ?? 0.55;
@@ -214,7 +214,7 @@ class Sep {
     this.unclip();
   }
 
-  /** Straight parallel hatching clipped to a polygon — for cuffs and flat planes. */
+  /** Straight parallel hatching clipped to a polygon: for cuffs and flat planes. */
   hatchPoly(poly, o = {}) {
     const ang = o.angle ?? -1.05, spacing = o.spacing ?? 4, w = o.w ?? 1, tone = o.tone ?? 1;
     let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
@@ -280,7 +280,7 @@ export class Ink {
   }
 }
 
-/** A reusable grain tile — cheaper than per-frame ImageData noise. */
+/** A reusable grain tile: cheaper than per-frame ImageData noise. */
 export function grainTile(rng, size = 128, amount = 0.07) {
   const c = document.createElement('canvas'); c.width = c.height = size;
   const x = c.getContext('2d');
