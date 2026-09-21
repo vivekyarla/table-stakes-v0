@@ -162,7 +162,7 @@ export function drawStatic(ink, rng, project, W, H, mpp, mask) {
     }
   }
   // 6. compass and neat line, in gold
-  const cx = W - 96, cy = H - 96;
+  const cx = W - 96, cy = H - 118;   // clear of the ticker band
   for (let k = 0; k < 4; k++) {
     const a = (k / 4) * Math.PI * 2 - Math.PI / 2;
     const tip = [cx + Math.cos(a) * 40, cy + Math.sin(a) * 40];

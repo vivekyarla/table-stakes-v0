@@ -54,6 +54,18 @@ a { color: inherit; }
 #card em { font-style: normal; font-size: 11px; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
 
 
+/* the wire: a ticker along the bottom of the map, inside the neat line */
+#ticker { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; height: 36px; overflow: hidden; background: var(--paper); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--gold); opacity: 0; transition: opacity .8s ease .4s; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+#hero.ready #ticker { opacity: 1; }
+#hero.now #ticker { transition: none; }
+#ticker .track { display: flex; align-items: center; height: 100%; width: max-content; animation: wire 46s linear infinite; }
+#ticker span { font: 500 11.5px/1 var(--sans); letter-spacing: .22em; color: var(--ink); white-space: nowrap; padding: 0 22px; }
+#ticker i { width: 11px; height: 11px; color: var(--gold); flex: none; }
+#ticker i svg { width: 100%; height: 100%; display: block; }
+@keyframes wire { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { #ticker .track { animation: none; } }
+
 /* intro */
 #intro-wrap { position: fixed; inset: 0; z-index: 40; cursor: pointer; }
 #intro-wrap::after { content: "click to skip"; position: absolute; right: 22px; bottom: 18px; font: 500 11px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); }
@@ -61,9 +73,8 @@ a { color: inherit; }
 
 /* the guide */
 .guide { max-width: 1120px; margin: 0 auto; padding: 72px 24px 120px; }
-.guide .intro { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px 48px; align-items: end; border-top: 1px solid var(--ink); padding-top: 22px; margin-bottom: 44px; }
-.guide .intro h2 { margin: 0; max-width: 22ch; font: 500 clamp(26px, 3vw, 38px)/1.15 var(--serif); text-wrap: balance; }
-.guide .intro p { margin: 0 0 6px; max-width: 30ch; font: 500 clamp(17px, 1.5vw, 20px)/1.4 var(--serif); font-style: italic; color: var(--ink-2); }
+.guide .intro { border-top: 1px solid var(--ink); padding-top: 22px; margin-bottom: 40px; }
+.guide .intro h2 { margin: 0; font: 500 clamp(24px, 3.4vw, 46px)/1.15 var(--serif); white-space: nowrap; }
 .legend { display: flex; gap: 26px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin-bottom: 40px; }
 .legend div { display: flex; align-items: center; gap: 8px; }
 .shakes { display: inline-flex; gap: 3px; }
@@ -99,7 +110,7 @@ footer .lockup { height: 40px; color: var(--ink); }
 footer .lockup svg { height: 100%; width: auto; }
 
 @media (max-width: 720px) {
-  .guide .intro { grid-template-columns: 1fr; }
+  .guide .intro h2 { white-space: normal; }
   .spot { grid-template-columns: 1fr; gap: 12px; }
   .spot .num { padding-top: 0; }
   .spot .photo { order: -1; }
@@ -133,14 +144,14 @@ footer .lockup svg { height: 100%; width: auto; }
     <p class="by">by <svg class="word" viewBox="0 0 257.94 100" aria-label="Rox"><use href="#i-rox"/></svg><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#i-sparkle"/></svg></p>
   </header>
   <div id="card" role="tooltip"></div>
+  <div id="ticker" aria-hidden="true"><div class="track"></div></div>
 </section>
 
 <div id="intro-wrap"><canvas id="intro"></canvas></div>
 
 <main class="guide" id="guide">
   <div class="intro" id="about">
-    <h2>We compiled the best spots in SF to get deals done, and ranked them.</h2>
-    <p>Share them, vote on them, add your favorite closing memories, and submit new spots!</p>
+    <h2>The best spots to get deals done in San Francisco.</h2>
   </div>
   <div class="legend">
     <div><span class="shakes"><i class="on"><svg viewBox="0 0 24 24"><use href="#i-handshake"/></svg></i><i><svg viewBox="0 0 24 24"><use href="#i-handshake"/></svg></i><i><svg viewBox="0 0 24 24"><use href="#i-handshake"/></svg></i></span> Good in its category</div>

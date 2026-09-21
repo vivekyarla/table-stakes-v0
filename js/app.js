@@ -1,7 +1,7 @@
 // Page wiring: intro → map reveal; Leaflet markers with an on-cursor card; click-to-scroll.
 import { runCurtain } from './curtain.js';
 import { SFMap } from './map.js';
-import { SPOTS, RATING } from './data.js';
+import { SPOTS, RATING, TICKER } from './data.js';
 
 const q = new URLSearchParams(location.search);
 const $ = (s, r = document) => r.querySelector(s);
@@ -54,6 +54,10 @@ function startMap() {
   }, 800);
   if (q.has('card')) { const s = SPOTS.find((x) => x.id === q.get('card')) || SPOTS[0]; setTimeout(() => { showCard(s); const p = map.project([s.lon, s.lat]); placeCard(p[0], p[1]); }, 50); }
 }
+
+// ticker: the run is laid twice so the loop is seamless at -50%
+const run = TICKER.map((t) => `<span>${t.toUpperCase()}</span><i><svg viewBox="0 0 100 100"><use href="#i-sparkle"/></svg></i>`).join('');
+$('#ticker .track').innerHTML = run + run;
 
 const gmaps = (s) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${s.name}, ${s.address}, San Francisco, CA`);
 $('#list').innerHTML = SPOTS.map((s, i) => `

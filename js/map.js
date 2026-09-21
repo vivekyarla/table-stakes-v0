@@ -119,6 +119,11 @@ export class SFMap {
   setPointer(nx, ny) { this.par.tx = nx; this.par.ty = ny; }
 
   frame(now = performance.now()) {
+    // the hero can change size without a window resize; keep the drawing matched to it
+    const rr = this.container.getBoundingClientRect();
+    if ((Math.round(rr.width) !== this.W || Math.round(rr.height) !== this.H) && rr.width > 0) {
+      this.map.invalidateSize({ animate: false }); this.fit(); this.build();
+    }
     const { ctx, dpr, W, H } = this;
     const t = (now - this.t0) / 1000;
     this.par.x += (this.par.tx - this.par.x) * 0.06; this.par.y += (this.par.ty - this.par.y) * 0.06;

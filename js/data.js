@@ -24,3 +24,13 @@ export const RATING = {
   2: 'Worth a detour',
   1: 'Good in its category',
 };
+
+// The wire, running along the bottom of the map.
+export const TICKER = [
+  'Incremental ARR spotted in SoMa',
+  'NNMs skyrocket outside FiDi',
+  'GTM motions in era of change citywide',
+  'Agents found at Pier 41',
+  'New 24/7 cafe opens in Tenderloin',
+  'Outdated sales reps exiled to Moscone Center',
+];
