@@ -23,7 +23,7 @@ class Sep {
     if (close) c.closePath();
   }
   fill(pts, tone = 1) {
-    if (this.rec) { this.rec.push({ pts, tone, clip: this._clip }); return; }
+    if (this.rec) { this.rec.push({ pts, tone, clip: this._clip, line: this._line }); this._line = null; return; }
     const c = this.ctx; c.globalAlpha = tone; c.fillStyle = '#000'; this.path(pts); c.fill(); c.globalAlpha = 1;
   }
   /** Knock a shape back out of this separation so forms behind it are hidden. */
@@ -94,6 +94,7 @@ class Sep {
       L.push([p[0] + nm[i][0] * hw, p[1] + nm[i][1] * hw]);
       R.push([p[0] - nm[i][0] * hw, p[1] - nm[i][1] * hw]);
     }
+    if (this.rec) this._line = { P, w };
     this.fill(L.concat(R.reverse()), tone);
   }
 
@@ -230,6 +231,18 @@ class Sep {
     }
     this.unclip();
   }
+}
+
+/** Draw the first `f` of a recorded stroke's centreline onto ctx (pen in motion). */
+export function playPartial(ctx, m, f, color) {
+    if (!m.line || m.line.P.length < 2) return;
+    const P = m.line.P, n = Math.max(2, Math.ceil(P.length * f));
+    if (m.clip) { ctx.save(); ctx.beginPath(); ctx.moveTo(m.clip[0][0], m.clip[0][1]); for (let i = 1; i < m.clip.length; i++) ctx.lineTo(m.clip[i][0], m.clip[i][1]); ctx.closePath(); ctx.clip(); }
+    ctx.globalAlpha = m.tone; ctx.strokeStyle = color; ctx.lineWidth = m.line.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+    for (let i = 1; i < n; i++) ctx.lineTo(P[i][0], P[i][1]);
+    ctx.stroke(); ctx.globalAlpha = 1;
+    if (m.clip) ctx.restore();
 }
 
 export class Ink {

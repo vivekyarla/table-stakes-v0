@@ -27,8 +27,9 @@ under the drawing; `?pan` enables dragging and zooming. Rebuild the geometry
 with `python3 tools/build-geo.py` (re-fetch with the Overpass queries in
 `data/q_*.ql`; OpenStreetMap data is ODbL — keep the attribution).
 
-Sequence on load: handshake (4.2s, click or Esc to skip) → hands part and turn
-to ink → the map draws itself in beneath → title rises → markers appear.
+Sequence on load: handshake (4.2s, click or Esc to skip) → hands part → the map
+draws itself in beneath as a moving pen (~2.2s; every recorded stroke has a
+staggered start and draws along its length) → title rises → markers appear.
 `prefers-reduced-motion` skips straight to the finished map.
 
 QA switches on `index.html`: `?nointro`, `?t=<seconds>` (map clock),
@@ -52,7 +53,7 @@ as a **signed-distance field, raymarched in a WebGL2 fragment shader**:
     js/gl.js       thin WebGL2 wrapper (one quad, one program, uniforms)
     js/vec3.js     vector / rotation helpers
 
-Set `POSES.style = 1` for a toned-monochrome grade.
+`POSES.style`: 0 colour, 1 toned monochrome, 2 monochrome with gold hands (the default).
 
 ## Engraving surface (kept for the map)
 

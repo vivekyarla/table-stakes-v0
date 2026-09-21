@@ -16,16 +16,16 @@ export const POSES = {
   A_APPROACH: { pos: [-330, -70, 40], yaw: -0.14, tilt: 0.16, roll: -0.95 },
   B_APPROACH: { pos: [330, -30, -20], yaw: Math.PI - 0.14, tilt: -0.10, roll: 1.25 },
   // clasp: vertical, thumbs up, B tucked behind A with palms meeting
-  A_CLASP:    { pos: [-70, 4, 15], yaw: 0.10, tilt: -0.35, roll: 0.15 },
-  B_CLASP:    { pos: [70, -6, -15], yaw: Math.PI + 0.10, tilt: -0.35, roll: 0.75 },
+  A_CLASP:    { pos: [-70, 4, 19], yaw: 0.10, tilt: -0.35, roll: 0.15 },
+  B_CLASP:    { pos: [70, -6, -26], yaw: Math.PI + 0.10, tilt: -0.35, roll: 0.75 },
   cam: { pos: [20, 110, 480], target: [0, -14, 0], fov: 0.66 },
   light: [-0.55, 0.78, 0.55],
   gripMax: 0.85,
   thumbAdduct: [0.95, -0.10, -0.28],
-  style: 0.0,
+  style: 2.0,     // 0 colour, 1 toned mono, 2 mono with gold hands
   only: 0,      // 0 both, 1 hand A, 2 hand B
   alphaBg: false,
-  inkOut: true,  // hands desaturate to ink as they part
+  inkOut: false,
 };
 
 function lerpPose(p, q, t) {

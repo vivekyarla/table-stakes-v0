@@ -18,7 +18,6 @@ export const HILLS = [
   { name: 'Mt Olympus', ll: [37.7628, -122.4440], r: 180 },
   { name: 'Presidio', ll: [37.7960, -122.4630], r: 260 },
   { name: 'Marin Headlands', ll: [37.8270, -122.5050], r: 520, quiet: true },
-  { name: 'Yerba Buena', ll: [37.8090, -122.3650], r: 260 },
 ];
 export const LABELS = [
   { t: 'PACIFIC OCEAN', ll: [37.735, -122.545], s: 20, sp: 6, a: -Math.PI / 2 },

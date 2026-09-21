@@ -72,7 +72,7 @@ vec2 map(vec3 p) {
     else if (grp == 6) dNail = min(dNail, d);
     else { if (d < dCloth) { dCloth = d; mCloth = g.y; } }
   }
-  float dSkin = smin(dA, dB, 5.0);
+  float dSkin = min(dA, dB);      // two hands press, they do not fuse
   vec2 r = vec2(dSkin, 0.0);
   if (dNail < r.x) r = vec2(dNail, 3.0);
   if (dCloth < r.x) r = vec2(dCloth, mCloth);
@@ -186,13 +186,24 @@ void main() {
     col *= mix(0.6, 1.0, ao);
     // light fog toward the paper so far parts sit back
     col = mix(col, bg, clamp((t - 900.0) / 2400.0, 0.0, 0.35));
+    if (uStyle > 1.5) {
+      // black and white, with the hands in gold
+      float lum = dot(col, vec3(0.299, 0.587, 0.114));
+      if (mat < 0.5 || mat > 2.5) {
+        vec3 g = mix(vec3(0.22, 0.15, 0.04), vec3(1.0, 0.88, 0.50), pow(lum * 1.15, 0.85));
+        g += vec3(1.0, 0.92, 0.70) * sp * 2.2;
+        col = g;
+      } else {
+        col = mix(vec3(0.09, 0.08, 0.075), vec3(0.97, 0.96, 0.93), pow(lum, 0.9));
+      }
+    }
   }
 
   if (!hit && uAlphaBg > 0.5) { fragColor = vec4(0.0); return; }
   // grade: optional toned monochrome, grain, vignette
   float lum = dot(col, vec3(0.299, 0.587, 0.114));
   vec3 toned = mix(vec3(0.16, 0.14, 0.12), vec3(0.97, 0.95, 0.91), lum);
-  col = mix(col, toned, uStyle);
+  col = mix(col, toned, clamp(uStyle, 0.0, 1.0) * step(uStyle, 1.5));
   col += (hash(gl_FragCoord.xy) - 0.5) * 0.03;
   col *= 1.0 - (uAlphaBg > 0.5 ? 0.0 : 0.18) * pow(length(suv - 0.5) * 1.35, 2.5);
   fragColor = vec4(pow(clamp(col, 0.0, 1.0), vec3(1.0 / 1.05)), 1.0);
