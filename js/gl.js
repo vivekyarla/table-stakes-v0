@@ -2,7 +2,7 @@
 import { VS, FS, MAXB } from './shader.js';
 
 export function createRenderer(canvas) {
-  const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
+  const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false, premultipliedAlpha: true, alpha: true });
   if (!gl) throw new Error('WebGL2 unavailable');
   const mk = (type, src) => {
     const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
@@ -22,7 +22,8 @@ export function createRenderer(canvas) {
   gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = (n) => gl.getUniformLocation(prog, n);
   const u = { res: U('uRes'), camPos: U('uCamPos'), camTarget: U('uCamTarget'), fov: U('uFov'), light: U('uLight'),
-              count: U('uCount'), A: U('uA'), B: U('uB'), G: U('uG'), style: U('uStyle'), paper: U('uPaper'), seed: U('uSeed') };
+              count: U('uCount'), A: U('uA'), B: U('uB'), G: U('uG'), style: U('uStyle'), paper: U('uPaper'), seed: U('uSeed'),
+              alphaBg: U('uAlphaBg'), sphA: U('uSphA'), sphB: U('uSphB') };
   const fA = new Float32Array(MAXB * 4), fB = new Float32Array(MAXB * 4), fG = new Float32Array(MAXB * 4);
 
   function render(scene, W, H) {
@@ -46,6 +47,17 @@ export function createRenderer(canvas) {
     gl.uniform1f(u.style, scene.style ?? 0);
     gl.uniform3fv(u.paper, scene.paper ?? [0.949, 0.937, 0.906]);
     gl.uniform1f(u.seed, scene.seed ?? 0);
+    gl.uniform1f(u.alphaBg, scene.alphaBg ? 1 : 0);
+    // bounding spheres per skin group
+    const sph = (grp) => {
+      let n = 0, cx = 0, cy = 0, cz = 0;
+      for (const b of scene.bones) if (b.group === grp) { cx += b.a[0] + b.b[0]; cy += b.a[1] + b.b[1]; cz += b.a[2] + b.b[2]; n += 2; }
+      if (!n) return [0, 0, 0, 1];
+      cx /= n; cy /= n; cz /= n; let r = 0;
+      for (const b of scene.bones) if (b.group === grp) for (const p of [b.a, b.b]) r = Math.max(r, Math.hypot(p[0] - cx, p[1] - cy, p[2] - cz) + Math.max(b.ra, b.rb));
+      return [cx, cy, cz, r + 4];
+    };
+    gl.uniform4fv(u.sphA, sph(0)); gl.uniform4fv(u.sphB, sph(1));
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.finish();
   }

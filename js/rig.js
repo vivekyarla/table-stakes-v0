@@ -38,7 +38,7 @@ export function handBones(g, { grip = 0.1, spread = 0.4, thumbUp = 0.5, thumbAdd
   const skin = (a, b, ra, rb, k = 10) => bones.push({ a, b, ra, rb, group: g, mat: 0, k, shape: 0 });
 
   // forearm and wrist
-  skin([-760, 0, 0], [-40, 0, 0], 34, 29, 6);
+  skin([-120, 0, 0], [-40, 0, 0], 33, 29, 6);
   skin([-44, 0, 0], [6, 0, 0], 28, 25, 10);
   // palm: metacarpals blended into a slab, plus the two muscle pads
   for (const f of FINGERS) skin(f.meta[0], f.meta[1], f.mr[0], f.mr[1], 22);

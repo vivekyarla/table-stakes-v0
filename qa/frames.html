@@ -20,7 +20,14 @@ const glc = document.createElement('canvas');
 const R = createRenderer(glc);
 const c = document.getElementById('c'), ctx = c.getContext('2d');
 const frame = (f, W, H) => { R.render(sceneAt(f / (TOTAL - 1), seed), W, H); return glc; };
-if (q.has('grid')) {
+if (q.has('bench')) {
+  const W = +(q.get('w') || 720), H = Math.round(W * 0.5625);
+  POSES.alphaBg = true;
+  const times = [];
+  const px = new Uint8Array(4);
+  for (const f of [30, 90, 130, 170, 220]) { const a = performance.now(); R.render(sceneAt(f / (TOTAL - 1), seed), W, H); R.gl.readPixels(W >> 1, H >> 1, 1, 1, R.gl.RGBA, R.gl.UNSIGNED_BYTE, px); times.push((performance.now() - a).toFixed(0) + '(' + px[3] + ')'); }
+  document.body.insertAdjacentHTML('beforeend', '<pre id="bench">' + W + 'x' + H + ' ms/frame: ' + times.join(', ') + '</pre>');
+} else if (q.has('grid')) {
   const n = +(q.get('grid') || 12), cols = +(q.get('cols') || 4), rows = Math.ceil(n / cols);
   const pad = 10, lab = 16;
   c.width = cols * (FW + pad) + pad; c.height = rows * (FH + lab + pad) + pad;

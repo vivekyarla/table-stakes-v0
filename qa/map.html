@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>map QA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#22201d}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script>window.onerror=(m,src,l,c)=>{document.body.insertAdjacentHTML('beforeend','<pre style="color:#ff8f6b;padding:12px;font:13px ui-monospace;white-space:pre-wrap">'+m+'\n'+src+':'+l+':'+c+'</pre>');document.title='error';};</script>
+<script type="module">
+import { SFMap } from '../js/map.js';
+import { W, H } from '../js/sfmap.js';
+try {
+  const q = new URLSearchParams(location.search);
+  const c = document.getElementById('c'); const dpr = +(q.get('dpr') || 1);
+  c.width = W * dpr; c.height = H * dpr; c.style.width = W + 'px'; c.style.height = H + 'px';
+  const m = new SFMap(c, { seed: +(q.get('s') || 7), dpr });
+  m.setPointer(+(q.get('px') || 0), +(q.get('py') || 0));
+  await document.fonts.ready;
+  // drive time deterministically: reveal fraction `r` (0..1) and clock `t` seconds
+  const r = +(q.get('r') || 1), t = +(q.get('t') || 3);
+  const t0 = performance.now();
+  m.t0 = t0 - t * 1000;
+  m.revealStart = t0 - r * 2600;
+  m.par.x = m.par.tx; m.par.y = m.par.ty;
+  m.frame(t0);
+  if (r >= 1) m.frame(t0 + 1);   // second pass: bake + draw baked
+  document.title = 'ready';
+} catch (e) { document.body.insertAdjacentHTML('beforeend','<pre style="color:#ff8f6b;padding:12px;font:13px ui-monospace">'+(e.stack||e)+'</pre>'); }
+</script></body></html>

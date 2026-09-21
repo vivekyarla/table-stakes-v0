@@ -8,7 +8,7 @@ Q="${1:-grid=12}"; OUT="${2:-/tmp/frames.png}"; SIZE="${3:-1800x1200}"; PAGE="${
 TMP="$(mktemp -d)"
 "$CHROME" --headless --no-sandbox --hide-scrollbars \
   --allow-file-access-from-files --force-device-scale-factor=1 \
-  --virtual-time-budget=25000 --window-size="${SIZE/x/,}" \
-  --screenshot="$TMP/s.png" "file://$ROOT/qa/$PAGE.html?$Q" >/dev/null 2>&1
+  --virtual-time-budget="${BUDGET:-25000}" --window-size="${SIZE/x/,}" \
+  --screenshot="$TMP/s.png" "file://$ROOT/$( [ "$PAGE" = index ] && echo index.html || echo qa/$PAGE.html )?$Q" >/dev/null 2>&1
 cp "$TMP/s.png" "$OUT"; rm -rf "$TMP"
 echo "$OUT"

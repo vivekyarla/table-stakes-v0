@@ -24,6 +24,8 @@ export const POSES = {
   thumbAdduct: [0.95, -0.10, -0.28],
   style: 0.0,
   only: 0,      // 0 both, 1 hand A, 2 hand B
+  alphaBg: false,
+  inkOut: true,  // hands desaturate to ink as they part
 };
 
 function lerpPose(p, q, t) {
@@ -62,5 +64,7 @@ export function sceneAt(t, seed = 7) {
   const bones = [];
   if (POSES.only !== 1) bones.push(...place(handBones(1, { grip: p.B.grip, spread: p.B.spread, thumbUp: p.B.thumbUp, thumbAdduct: POSES.thumbAdduct }), p.B));
   if (POSES.only !== 2) bones.push(...place(handBones(0, { grip: p.A.grip, spread: p.A.spread, thumbUp: p.A.thumbUp, thumbAdduct: POSES.thumbAdduct }), p.A));
-  return { bones, cam: POSES.cam, light: POSES.light, style: POSES.style, seed, pose: p };
+  const part = cl((t - PHASES.part[0]) / (PHASES.part[1] - PHASES.part[0]));
+  const style = Math.max(POSES.style, POSES.inkOut ? easeInOut(cl((part - 0.15) / 0.6)) : 0);
+  return { bones, cam: POSES.cam, light: POSES.light, style, seed, pose: p, alphaBg: POSES.alphaBg };
 }

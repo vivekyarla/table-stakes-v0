@@ -22,11 +22,32 @@ class Sep {
     for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]);
     if (close) c.closePath();
   }
-  fill(pts, tone = 1) { const c = this.ctx; c.globalAlpha = tone; c.fillStyle = '#000'; this.path(pts); c.fill(); c.globalAlpha = 1; }
+  fill(pts, tone = 1) {
+    if (this.rec) { this.rec.push({ pts, tone, clip: this._clip }); return; }
+    const c = this.ctx; c.globalAlpha = tone; c.fillStyle = '#000'; this.path(pts); c.fill(); c.globalAlpha = 1;
+  }
   /** Knock a shape back out of this separation so forms behind it are hidden. */
-  erase(pts) { const c = this.ctx; c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; this.path(pts); c.fill(); c.restore(); }
-  clip(pts) { const c = this.ctx; c.save(); this.path(pts); c.clip(); }
-  unclip() { this.ctx.restore(); }
+  erase(pts) {
+    if (this.rec) { this.rec.push({ pts, erase: true, clip: this._clip }); return; }
+    const c = this.ctx; c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; this.path(pts); c.fill(); c.restore();
+  }
+  clip(pts) { if (this.rec) { this._clip = pts; return; } const c = this.ctx; c.save(); this.path(pts); c.clip(); }
+  unclip() { if (this.rec) { this._clip = null; return; } this.ctx.restore(); }
+
+  /** Record marks instead of drawing them, so they can be played back over time. */
+  record() { this.rec = []; this._clip = null; return this.rec; }
+  stopRecording() { const r = this.rec; this.rec = null; this._clip = null; return r; }
+  /** Draw recorded marks [i0, i1). */
+  play(rec, i0, i1) {
+    const c = this.ctx;
+    for (let i = i0; i < Math.min(i1, rec.length); i++) {
+      const m = rec[i];
+      if (m.clip) { c.save(); this.path(m.clip); c.clip(); }
+      if (m.erase) { c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; this.path(m.pts); c.fill(); c.restore(); }
+      else { c.globalAlpha = m.tone; c.fillStyle = '#000'; this.path(m.pts); c.fill(); c.globalAlpha = 1; }
+      if (m.clip) c.restore();
+    }
+  }
 
   /** A nib stroke: slight tremor along its length, pressure taper at the ends. */
   stroke(pts, o = {}) {
@@ -216,13 +237,13 @@ export class Ink {
   clear() { for (const s of Object.values(this.seps)) s.clear(); }
 
   /** Tint each separation, offset it a hair, multiply it down onto the paper. */
-  composite(ctx) {
+  composite(ctx, { paper = true, dx = 0, dy = 0 } = {}) {
     const { W, H, dpr } = this;
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = this.paper; ctx.fillRect(0, 0, W, H);
-    const tmp = document.createElement('canvas');
-    tmp.width = Math.ceil(W * dpr); tmp.height = Math.ceil(H * dpr);
+    if (paper) { ctx.fillStyle = this.paper; ctx.fillRect(0, 0, W, H); }
+    if (!this._tmp) { this._tmp = document.createElement('canvas'); this._tmp.width = Math.ceil(W * dpr); this._tmp.height = Math.ceil(H * dpr); }
+    const tmp = this._tmp;
     const tc = tmp.getContext('2d');
     for (const s of Object.values(this.seps)) {
       tc.setTransform(1, 0, 0, 1, 0, 0);
@@ -232,7 +253,7 @@ export class Ink {
       tc.globalCompositeOperation = 'source-in';
       tc.fillStyle = s.color; tc.fillRect(0, 0, tmp.width, tmp.height);
       ctx.globalCompositeOperation = 'multiply';
-      ctx.drawImage(tmp, s.reg[0], s.reg[1], W, H);
+      ctx.drawImage(tmp, s.reg[0] + dx, s.reg[1] + dy, W, H);
     }
     ctx.globalCompositeOperation = 'source-over';
     ctx.restore();

@@ -20,6 +20,8 @@ uniform vec4 uG[${MAXB}];   // group, material, smooth k, shape
 uniform float uStyle;       // 0 = colour, 1 = toned monochrome
 uniform vec3 uPaper;
 uniform float uSeed;
+uniform float uAlphaBg;     // 1 = background pixels transparent (live page)
+uniform vec4 uSphA, uSphB;  // bounding spheres of each hand's skin (xyz, r)
 
 // ---------- SDF primitives ----------
 float sdRoundCone(vec3 p, vec3 a, vec3 b, float r1, float r2) {
@@ -52,9 +54,15 @@ float smin(float a, float b, float k) {
 // returns distance; material in .y (0 skin, 1 suit, 2 shirt, 3 nail)
 vec2 map(vec3 p) {
   float dA = 1e5, dB = 1e5, dNail = 1e5, dCloth = 1e5; float mCloth = 1.0;
+  float sA = length(p - uSphA.xyz) - uSphA.w, sB = length(p - uSphB.xyz) - uSphB.w;
+  bool nearA = sA < 30.0, nearB = sB < 30.0;
   for (int i = 0; i < ${MAXB}; i++) {
     if (i >= uCount) break;
     vec4 a = uA[i], b = uB[i], g = uG[i];
+    int grp0 = int(g.x + 0.5);
+    if (grp0 == 0 && !nearA) { dA = min(dA, sA); continue; }
+    if (grp0 == 1 && !nearB) { dB = min(dB, sB); continue; }
+    if (grp0 == 6 && !(nearA || nearB)) continue;
     float d;
     if (g.w < 0.5) d = sdRoundCone(p, a.xyz, b.xyz, a.w, b.w);
     else d = sdCyl(p, a.xyz, b.xyz, a.w, b.w);
@@ -120,7 +128,15 @@ void main() {
 
   float t = 0.0; float tmax = 3000.0; vec2 h = vec2(0.0);
   bool hit = false;
-  for (int i = 0; i < 110; i++) {
+  // start at the union bounding sphere; miss it and we are done
+  {
+    vec3 c = 0.5 * (uSphA.xyz + uSphB.xyz);
+    float R = 0.5 * distance(uSphA.xyz, uSphB.xyz) + max(uSphA.w, uSphB.w) + 420.0;
+    vec3 oc = ro - c; float b = dot(oc, rd); float cc = dot(oc, oc) - R * R; float disc = b * b - cc;
+    if (disc < 0.0) { if (uAlphaBg > 0.5) { fragColor = vec4(0.0); return; } }
+    else { t = max(0.0, -b - sqrt(disc)); tmax = -b + sqrt(disc); }
+  }
+  for (int i = 0; i < 96; i++) {
     vec3 p = ro + rd * t;
     h = map(p);
     if (h.x < 0.06) { hit = true; break; }
@@ -172,11 +188,12 @@ void main() {
     col = mix(col, bg, clamp((t - 900.0) / 2400.0, 0.0, 0.35));
   }
 
+  if (!hit && uAlphaBg > 0.5) { fragColor = vec4(0.0); return; }
   // grade: optional toned monochrome, grain, vignette
   float lum = dot(col, vec3(0.299, 0.587, 0.114));
   vec3 toned = mix(vec3(0.16, 0.14, 0.12), vec3(0.97, 0.95, 0.91), lum);
   col = mix(col, toned, uStyle);
   col += (hash(gl_FragCoord.xy) - 0.5) * 0.03;
-  col *= 1.0 - 0.18 * pow(length(suv - 0.5) * 1.35, 2.5);
+  col *= 1.0 - (uAlphaBg > 0.5 ? 0.0 : 0.18) * pow(length(suv - 0.5) * 1.35, 2.5);
   fragColor = vec4(pow(clamp(col, 0.0, 1.0), vec3(1.0 / 1.05)), 1.0);
 }`;
